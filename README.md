@@ -15,6 +15,7 @@ The application supports saving, loading, exporting, and zooming functionalities
 - **Arrow Creation**: Right-click to start and end arrows between nodes.
 - **Validation**: Arrows must follow the structure: concept → linking words → concept (not enforced!).
 - **Zooming**: Zoom in and out for better visualization.
+- **Scrolling**: Scroll the canvas for large diagrams.
 - **Export**: Save diagrams as JSON, export tuples as text files, or export diagrams as SVG.
 
 You can export the map as a comma delimited text file where each proposition in the map has the form:
