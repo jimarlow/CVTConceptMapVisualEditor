@@ -1,6 +1,6 @@
 # CVT Visual Concept Map Editor
 
-CVT Visual Concept Map Editor is a Python application built using PyQt6 that allows users to create and edit visual concept maps. 
+CVT Visual Concept Map Editor is a Python application built using PyQt6 that allows users to create and edit visual concept maps.
 
 It provides an intuitive interface for creating nodes, linking them with text, and forming propositions. 
 
@@ -17,11 +17,13 @@ The application supports saving, loading, exporting, and zooming functionalities
 - **Zooming**: Zoom in and out for better visualization.
 - **Export**: Save diagrams as JSON, export tuples as text files, or export diagrams as SVG.
 
-You can export the map as a comma delimited text file where each proposition has the form:
+You can export the map as a comma delimited text file where each proposition in the map has the form:
 
-concept1, linkiing words, concept2
+`concept1, linking words, concept2`
 
 This is very useful for inputting into Generative AI.
+
+We wrote this tool for readers of our book "Generative Analysis". You can find out much more about Concept Maps anand d proositions how to use them effectively with Generative AI in the book.
 
 ## Installation
 
@@ -53,7 +55,7 @@ This is very useful for inputting into Generative AI.
 ## File Formats
 
 - **JSON**: Save and load diagrams.
-- **TXT**: Export tuples in the format: `concept1, linking words, concept2`.
+- **TXT**: Export list of propositions in the format: `concept1, linking words, concept2`.
 - **SVG**: Export diagrams as scalable vector graphics.
 
 ## Keyboard and Mouse Controls
@@ -76,4 +78,4 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 
 ## Contact
 
-For questions or feedback, please contact [your-email@example.com].
+For questions or feedback, please contact via GitHub.
