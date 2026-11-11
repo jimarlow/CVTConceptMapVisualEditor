@@ -1,0 +1,446 @@
+{
+  "nodes": [
+    {
+      "type": "node",
+      "x": 447.0,
+      "y": 17.0,
+      "text": "burglar alarm",
+      "color": "#ffd479"
+    },
+    {
+      "type": "textnode",
+      "x": 290.0,
+      "y": 96.0,
+      "text": "sounds"
+    },
+    {
+      "type": "node",
+      "x": 258.0,
+      "y": 169.0,
+      "text": "siren",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 221.0,
+      "y": 229.0,
+      "text": "has"
+    },
+    {
+      "type": "node",
+      "x": 70.0,
+      "y": 476.0,
+      "text": "fire sound",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "node",
+      "x": 322.0,
+      "y": 476.0,
+      "text": "intruder sound",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 67.0,
+      "y": 551.0,
+      "text": "sounds for"
+    },
+    {
+      "type": "node",
+      "x": 66.0,
+      "y": 618.0,
+      "text": "30 minutes",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 328.0,
+      "y": 556.0,
+      "text": "sounds for"
+    },
+    {
+      "type": "node",
+      "x": 327.0,
+      "y": 624.0,
+      "text": "15 minutes",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 207.0,
+      "y": 462.0,
+      "text": "overrides"
+    },
+    {
+      "type": "node",
+      "x": 460.8841552734375,
+      "y": 251.99996948242188,
+      "text": "intruder",
+      "color": "#76d6ff"
+    },
+    {
+      "type": "node",
+      "x": 81.87974548339844,
+      "y": 221.99996948242188,
+      "text": "fire",
+      "color": "#ff2600"
+    },
+    {
+      "type": "node",
+      "x": 404.0,
+      "y": 140.0,
+      "text": "zones",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 450.0,
+      "y": 80.0,
+      "text": "monitors"
+    },
+    {
+      "type": "textnode",
+      "x": 363.0,
+      "y": 194.0,
+      "text": "contain"
+    },
+    {
+      "type": "node",
+      "x": 353.0,
+      "y": 249.0,
+      "text": "sensors",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 332.0,
+      "y": 317.0,
+      "text": "of type"
+    },
+    {
+      "type": "node",
+      "x": 53.0,
+      "y": 354.0,
+      "text": "fire sensor",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "node",
+      "x": 408.0,
+      "y": 370.0,
+      "text": "intruder sensor",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 65.0,
+      "y": 287.0,
+      "text": "triggers"
+    },
+    {
+      "type": "textnode",
+      "x": 50.0,
+      "y": 414.0,
+      "text": "triggers"
+    },
+    {
+      "type": "textnode",
+      "x": 414.0,
+      "y": 418.0,
+      "text": "triggers"
+    },
+    {
+      "type": "textnode",
+      "x": 454.0,
+      "y": 310.0,
+      "text": "triggers"
+    },
+    {
+      "type": "textnode",
+      "x": 632.0,
+      "y": 211.0,
+      "text": "has"
+    },
+    {
+      "type": "textnode",
+      "x": 522.0,
+      "y": 102.0,
+      "text": "operated by"
+    },
+    {
+      "type": "node",
+      "x": 551.0,
+      "y": 163.0,
+      "text": "control panel",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "node",
+      "x": 979.0,
+      "y": 218.0,
+      "text": "numeric keypad",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "node",
+      "x": 714.0,
+      "y": 321.0,
+      "text": "arm button",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "node",
+      "x": 857.0,
+      "y": 330.0,
+      "text": "disarm button",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "node",
+      "x": 545.0,
+      "y": 434.0,
+      "text": "armed/disarmed indicator",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "node",
+      "x": 895.0,
+      "y": 87.0,
+      "text": "PIN",
+      "color": "#c0c0c0"
+    },
+    {
+      "type": "textnode",
+      "x": 960.0,
+      "y": 145.0,
+      "text": "accepts"
+    },
+    {
+      "type": "textnode",
+      "x": 774.0,
+      "y": 22.0,
+      "text": "enables"
+    },
+    {
+      "type": "textnode",
+      "x": 720.0,
+      "y": 77.0,
+      "text": "validates"
+    },
+    {
+      "type": "textnode",
+      "x": 721.0,
+      "y": 377.0,
+      "text": "turns on"
+    },
+    {
+      "type": "textnode",
+      "x": 824.0,
+      "y": 394.0,
+      "text": "turns off"
+    },
+    {
+      "type": "textnode",
+      "x": 757.0,
+      "y": 164.0,
+      "text": "arm"
+    },
+    {
+      "type": "textnode",
+      "x": 831.0,
+      "y": 158.0,
+      "text": "disarm"
+    }
+  ],
+  "arrows": [
+    {
+      "start": 0,
+      "end": 1
+    },
+    {
+      "start": 1,
+      "end": 2
+    },
+    {
+      "start": 2,
+      "end": 3
+    },
+    {
+      "start": 3,
+      "end": 4
+    },
+    {
+      "start": 3,
+      "end": 5
+    },
+    {
+      "start": 4,
+      "end": 6
+    },
+    {
+      "start": 6,
+      "end": 7
+    },
+    {
+      "start": 5,
+      "end": 8
+    },
+    {
+      "start": 8,
+      "end": 9
+    },
+    {
+      "start": 4,
+      "end": 10
+    },
+    {
+      "start": 10,
+      "end": 5
+    },
+    {
+      "start": 0,
+      "end": 14
+    },
+    {
+      "start": 14,
+      "end": 13
+    },
+    {
+      "start": 13,
+      "end": 15
+    },
+    {
+      "start": 15,
+      "end": 16
+    },
+    {
+      "start": 16,
+      "end": 17
+    },
+    {
+      "start": 17,
+      "end": 19
+    },
+    {
+      "start": 17,
+      "end": 18
+    },
+    {
+      "start": 12,
+      "end": 20
+    },
+    {
+      "start": 20,
+      "end": 18
+    },
+    {
+      "start": 18,
+      "end": 21
+    },
+    {
+      "start": 21,
+      "end": 4
+    },
+    {
+      "start": 19,
+      "end": 22
+    },
+    {
+      "start": 22,
+      "end": 5
+    },
+    {
+      "start": 11,
+      "end": 23
+    },
+    {
+      "start": 23,
+      "end": 19
+    },
+    {
+      "start": 0,
+      "end": 25
+    },
+    {
+      "start": 25,
+      "end": 26
+    },
+    {
+      "start": 26,
+      "end": 24
+    },
+    {
+      "start": 24,
+      "end": 27
+    },
+    {
+      "start": 24,
+      "end": 28
+    },
+    {
+      "start": 24,
+      "end": 29
+    },
+    {
+      "start": 24,
+      "end": 30
+    },
+    {
+      "start": 27,
+      "end": 32
+    },
+    {
+      "start": 32,
+      "end": 31
+    },
+    {
+      "start": 31,
+      "end": 33
+    },
+    {
+      "start": 33,
+      "end": 0
+    },
+    {
+      "start": 0,
+      "end": 34
+    },
+    {
+      "start": 34,
+      "end": 31
+    },
+    {
+      "start": 28,
+      "end": 35
+    },
+    {
+      "start": 35,
+      "end": 30
+    },
+    {
+      "start": 29,
+      "end": 36
+    },
+    {
+      "start": 36,
+      "end": 30
+    },
+    {
+      "start": 28,
+      "end": 37
+    },
+    {
+      "start": 37,
+      "end": 0
+    },
+    {
+      "start": 29,
+      "end": 38
+    },
+    {
+      "start": 38,
+      "end": 0
+    }
+  ]
+}

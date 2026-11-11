@@ -16,7 +16,7 @@ import math
 import json
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit,
-    QFileDialog, QScrollArea
+    QFileDialog, QScrollArea, QColorDialog  # Add QColorDialog here
 )
 from PyQt6.QtGui import QPainter, QPen, QBrush, QFont, QColor, QFontMetrics
 from PyQt6.QtCore import Qt, QRectF, QPointF
@@ -34,6 +34,7 @@ class Node:
         self.selected = False
         self.font = font if font else QFont()
         self.font.setPointSize(12)
+        self.color = QColor(Qt.GlobalColor.lightGray)  # Add default color
         self.set_text(self.text)
 
     def set_text(self, text):
@@ -72,12 +73,16 @@ class Node:
             "type": "node",
             "x": self.x,
             "y": self.y,
-            "text": self.text
+            "text": self.text,
+            "color": self.color.name()  # Add color to serialization
         }
 
     @classmethod
     def from_dict(cls, d, font=None):
-        return cls(d["x"], d["y"], d["text"], font=font)
+        node = cls(d["x"], d["y"], d["text"], font=font)
+        if "color" in d:
+            node.color = QColor(d["color"])
+        return node
 
 class TextNode(Node):
     def __init__(self, x, y, text="Text", font=None):
@@ -190,16 +195,21 @@ class CanvasWidget(QWidget):
     def draw_node(self, painter, node):
         if node.selected:
             pen = QPen(QColor(0, 120, 215), 3)
-            brush = QBrush(QColor(180, 210, 255))
         else:
             pen = QPen(Qt.GlobalColor.black, 2)
-            brush = QBrush(Qt.GlobalColor.lightGray)
         painter.setPen(pen)
-        painter.setBrush(brush)
+        painter.setBrush(QBrush(node.color))  # Use node's color
         painter.drawRoundedRect(node.rect(), 15, 15)
         painter.setPen(Qt.GlobalColor.black)
         painter.setFont(node.font)
         painter.drawText(node.rect(), Qt.AlignmentFlag.AlignCenter, node.text)
+
+    def change_node_color(self):
+        if self.selected_node and not isinstance(self.selected_node, TextNode):
+            color = QColorDialog.getColor(self.selected_node.color, self)
+            if color.isValid():
+                self.selected_node.color = color
+                self.update()
 
     def draw_arrow(self, painter, start, end, selected=False):
         pen = QPen(QColor(0, 120, 215), 3) if selected else QPen(Qt.GlobalColor.black, 2)
@@ -436,15 +446,18 @@ class MainWindow(QMainWindow):
         add_btn = QPushButton("Concept")
         add_text_btn = QPushButton("Add Text Node")
         delete_btn = QPushButton("Delete")
+        color_btn = QPushButton("Color")  # Add color button
         save_btn = QPushButton("Save")
         load_btn = QPushButton("Load")
         export_btn = QPushButton("Export Tuples")
         export_svg_btn = QPushButton("Export SVG")
         zoom_in_btn = QPushButton("Zoom In")
         zoom_out_btn = QPushButton("Zoom Out")
+
         add_btn.clicked.connect(self.add_node)
         add_text_btn.clicked.connect(self.add_text_node)
         delete_btn.clicked.connect(self.delete_selected)
+        color_btn.clicked.connect(self.change_node_color)  # Connect color button
         save_btn.clicked.connect(self.save_diagram)
         load_btn.clicked.connect(self.load_diagram)
         export_btn.clicked.connect(self.export_tuples)
@@ -456,6 +469,7 @@ class MainWindow(QMainWindow):
         btn_layout.addWidget(add_btn)
         btn_layout.addWidget(add_text_btn)
         btn_layout.addWidget(delete_btn)
+        btn_layout.addWidget(color_btn)  # Add color button to layout
         btn_layout.addWidget(save_btn)
         btn_layout.addWidget(load_btn)
         btn_layout.addWidget(export_btn)
@@ -463,6 +477,8 @@ class MainWindow(QMainWindow):
         btn_layout.addWidget(zoom_in_btn)
         btn_layout.addWidget(zoom_out_btn)
         btn_layout.addStretch(1)
+
+        # Rest of the init_ui method remains the same
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(btn_layout)
@@ -475,6 +491,9 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(main_layout)
         self.setCentralWidget(container)
+
+    def change_node_color(self):
+        self.canvas.change_node_color()
 
     def add_node(self):
         self.canvas.add_node()

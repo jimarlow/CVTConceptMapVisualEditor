@@ -1,0 +1,26 @@
+burglar alarm, sounds, siren
+burglar alarm, monitors, zones
+burglar alarm, operated by, control panel
+burglar alarm, validates, PIN
+siren, has, fire sound
+siren, has, intruder sound
+fire sound, sounds for, 30 minutes
+fire sound, overrides, intruder sound
+intruder sound, sounds for, 15 minutes
+intruder, triggers, intruder sensor
+fire, triggers, fire sensor
+zones, contain, sensors
+sensors, of type, intruder sensor
+sensors, of type, fire sensor
+fire sensor, triggers, fire sound
+intruder sensor, triggers, intruder sound
+control panel, has, numeric keypad
+control panel, has, arm button
+control panel, has, disarm button
+control panel, has, armed/disarmed indicator
+numeric keypad, accepts, PIN
+arm button, turns on, armed/disarmed indicator
+arm button, arm, burglar alarm
+disarm button, turns off, armed/disarmed indicator
+disarm button, disarm, burglar alarm
+PIN, enables, burglar alarm
