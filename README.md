@@ -11,9 +11,10 @@ The application supports saving, loading, exporting, and zooming functionalities
 - **Concept Nodes**: Create rounded rectangles representing concepts.
 - **Text Nodes**: Add linking words between concepts.
 - **Propositions**: Form connections between concepts and linking words.
+- **Proposition Pane**: View the propositions formed by the current map in a pane to the right of the canvas.
 - **Editing**: Double-click to edit text of nodes or linking words.
 - **Arrow Creation**: Right-click to start and end arrows between nodes.
-- **Validation**: Arrows must follow the structure: concept → linking words → concept (not enforced!).
+- **Arrow Constraints**: Each arrow must connect one concept node and one linking-word text node. Either direction is allowed; concept-to-concept and text-to-text arrows are rejected.
 - **Zooming**: Zoom in and out for better visualization.
 - **Scrolling**: Scroll the canvas for large diagrams.
 - **Export**: Save diagrams as JSON, export tuples as text files, or export diagrams as SVG.
@@ -28,16 +29,19 @@ We wrote this tool for readers of our book "Generative Analysis". You can find o
 
 ## Installation
 
-1. Clone the repository:
+Use Python 3.14 to create the virtual environment. On macOS, install it with Homebrew if needed:
    ```bash
-   git clone <repository-url>
-   cd <repository-folder>
+   brew install python@3.14
    ```
 
-2. Install dependencies:
+From the project directory, create and activate the environment, then install the tested dependencies:
    ```bash
-   pip install pyqt6
+   python3.14 -m venv venv
+   source venv/bin/activate
+   python -m pip install -r requirements.txt
    ```
+
+Use the non-hidden `venv` directory on macOS. Qt's plugin scanner treats the platform plugins inside a dot-prefixed `.venv` as hidden and then cannot load the Cocoa plugin.
 
 ## Usage
 
@@ -49,8 +53,7 @@ We wrote this tool for readers of our book "Generative Analysis". You can find o
 2. Use the toolbar buttons to:
    - Add concept nodes or linking words nodes.
    - Delete selected nodes or arrows.
-   - Save or load diagrams.
-   - Export tuples or diagrams as SVG.
+   - Use the **File** menu to save/load diagrams and export propositions or SVG.
    - Zoom in or out.
 
 ## File Formats

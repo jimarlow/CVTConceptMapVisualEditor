@@ -16,10 +16,10 @@ import math
 import json
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit,
-    QFileDialog, QScrollArea, QColorDialog  # Add QColorDialog here
+    QFileDialog, QScrollArea, QColorDialog, QSplitter, QLabel, QListWidget, QMessageBox
 )
-from PyQt6.QtGui import QPainter, QPen, QBrush, QFont, QColor, QFontMetrics
-from PyQt6.QtCore import Qt, QRectF, QPointF
+from PyQt6.QtGui import QAction, QPainter, QPen, QBrush, QFont, QColor, QFontMetrics, QIcon, QPixmap
+from PyQt6.QtCore import Qt, QRectF, QPointF, QSize, pyqtSignal
 
 from PyQt6.QtSvgWidgets import QSvgWidget  # For SVG export, but we use QSvgGenerator below
 from PyQt6.QtSvg import QSvgGenerator
@@ -117,6 +117,9 @@ class TextNode(Node):
     def from_dict(cls, d, font=None):
         return cls(d["x"], d["y"], d["text"], font=font)
 
+def can_connect_nodes(first, second):
+    return isinstance(first, TextNode) != isinstance(second, TextNode)
+
 class Arrow:
     def __init__(self, start_node, end_node):
         self.start_node = start_node
@@ -154,6 +157,9 @@ class Arrow:
         return cls(nodes[d["start"]], nodes[d["end"]])
 
 class CanvasWidget(QWidget):
+    diagram_changed = pyqtSignal()
+    document_changed = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.nodes = []
@@ -163,6 +169,7 @@ class CanvasWidget(QWidget):
         self.selected_node = None
         self.selected_arrow = None
         self.arrow_source_node = None
+        self.node_was_dragged = False
         self.setMinimumSize(2000, 2000)
         self.node_font = QFont()
         self.node_font.setPointSize(12)
@@ -196,7 +203,7 @@ class CanvasWidget(QWidget):
         if node.selected:
             pen = QPen(QColor(0, 120, 215), 3)
         else:
-            pen = QPen(Qt.GlobalColor.black, 2)
+            pen = QPen(Qt.GlobalColor.black, 1)
         painter.setPen(pen)
         painter.setBrush(QBrush(node.color))  # Use node's color
         painter.drawRoundedRect(node.rect(), 15, 15)
@@ -208,17 +215,19 @@ class CanvasWidget(QWidget):
         if self.selected_node and not isinstance(self.selected_node, TextNode):
             color = QColorDialog.getColor(self.selected_node.color, self)
             if color.isValid():
-                self.selected_node.color = color
-                self.update()
+                if color != self.selected_node.color:
+                    self.selected_node.color = color
+                    self.update()
+                    self.document_changed.emit()
 
     def draw_arrow(self, painter, start, end, selected=False):
-        pen = QPen(QColor(0, 120, 215), 3) if selected else QPen(Qt.GlobalColor.black, 2)
+        pen = QPen(QColor(0, 120, 215), 1) if selected else QPen(Qt.GlobalColor.black, 1)
         painter.setPen(pen)
         painter.drawLine(start, end)
         self.draw_arrowhead(painter, start, end, selected)
 
     def draw_arrowhead(self, painter, start, end, selected=False):
-        arrow_size = 15
+        arrow_size = 10
         angle = math.atan2(end.y() - start.y(), end.x() - start.x())
         p1 = end
         p2 = QPointF(
@@ -244,6 +253,7 @@ class CanvasWidget(QWidget):
                 if node.contains(pos):
                     self.select_node(node)
                     self.dragging_node = node
+                    self.node_was_dragged = False
                     self.drag_offset = pos - QPointF(node.x, node.y)
                     self.hide_editor()
                     self.update()
@@ -251,35 +261,50 @@ class CanvasWidget(QWidget):
             self.select_node(None)
             self.select_arrow(None)
             self.dragging_node = None
+            self.node_was_dragged = False
             self.hide_editor()
             self.update()
         elif event.button() == Qt.MouseButton.RightButton:
             for node in reversed(self.nodes):
                 if node.contains(pos):
                     if self.arrow_source_node and self.arrow_source_node != node:
-                        self.arrows.append(Arrow(self.arrow_source_node, node))
-                        self.arrow_source_node = None
-                        self.setCursor(Qt.CursorShape.ArrowCursor)
-                        self.hide_editor()
-                        self.update()
+                        if can_connect_nodes(self.arrow_source_node, node):
+                            self.arrows.append(Arrow(self.arrow_source_node, node))
+                            self.arrow_source_node = None
+                            self.setCursor(Qt.CursorShape.ArrowCursor)
+                            self.hide_editor()
+                            self.update()
+                            self.diagram_changed.emit()
+                            self.document_changed.emit()
+                        else:
+                            window = self.window()
+                            if isinstance(window, QMainWindow):
+                                window.statusBar().showMessage(
+                                    "Arrows must connect a concept node and a text node.",
+                                    4000,
+                                )
                     else:
                         self.arrow_source_node = node
                         self.setCursor(Qt.CursorShape.CrossCursor)
                     return
-            if self.arrow_source_node:
-                self.arrow_source_node = None
-                self.setCursor(Qt.CursorShape.ArrowCursor)
+            self.arrow_source_node = None
+            self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def mouseMoveEvent(self, event):
         if self.dragging_node:
             pos = event.position() / self._zoom - self.drag_offset
-            self.dragging_node.x = pos.x()
-            self.dragging_node.y = pos.y()
+            if self.dragging_node.x != pos.x() or self.dragging_node.y != pos.y():
+                self.dragging_node.x = pos.x()
+                self.dragging_node.y = pos.y()
+                self.node_was_dragged = True
             self.hide_editor()
             self.update()
 
     def mouseReleaseEvent(self, event):
+        if self.node_was_dragged:
+            self.document_changed.emit()
         self.dragging_node = None
+        self.node_was_dragged = False
 
     def mouseDoubleClickEvent(self, event):
         pos = event.position() / self._zoom
@@ -306,10 +331,14 @@ class CanvasWidget(QWidget):
     def finish_editing(self):
         if self.editing_node:
             text = self.editor.text()
+            changed = self.editing_node.text != text
             self.editing_node.set_text(text)
             self.editing_node = None
             self.editor.hide()
             self.update()
+            if changed:
+                self.diagram_changed.emit()
+                self.document_changed.emit()
 
     def hide_editor(self):
         self.editor.hide()
@@ -348,6 +377,7 @@ class CanvasWidget(QWidget):
         node = Node(x, y, text=text, font=self.node_font)
         self.nodes.append(node)
         self.update()
+        self.document_changed.emit()
 
     def add_text_node(self, x=20, y=20, text=None):
         if text is None:
@@ -355,6 +385,7 @@ class CanvasWidget(QWidget):
         node = TextNode(x, y, text=text, font=self.node_font)
         self.nodes.append(node)
         self.update()
+        self.document_changed.emit()
 
     def delete_selected_node(self):
         if self.selected_node:
@@ -365,12 +396,16 @@ class CanvasWidget(QWidget):
             self.nodes.remove(self.selected_node)
             self.selected_node = None
             self.update()
+            self.diagram_changed.emit()
+            self.document_changed.emit()
 
     def delete_selected_arrow(self):
         if self.selected_arrow:
             self.arrows.remove(self.selected_arrow)
             self.selected_arrow = None
             self.update()
+            self.diagram_changed.emit()
+            self.document_changed.emit()
 
     def save_diagram(self, filename):
         node_indices = {node: idx for idx, node in enumerate(self.nodes)}
@@ -384,8 +419,7 @@ class CanvasWidget(QWidget):
     def load_diagram(self, filename):
         with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)
-        self.nodes.clear()
-        self.arrows.clear()
+        nodes = []
         for nd in data["nodes"]:
             if nd["type"] == "node":
                 node = Node.from_dict(nd, font=self.node_font)
@@ -393,28 +427,46 @@ class CanvasWidget(QWidget):
                 node = TextNode.from_dict(nd, font=self.node_font)
             else:
                 continue
-            self.nodes.append(node)
-        for ad in data["arrows"]:
-            start = self.nodes[ad["start"]]
-            end = self.nodes[ad["end"]]
-            self.arrows.append(Arrow(start, end))
+            nodes.append(node)
+        arrows = []
+        for index, ad in enumerate(data["arrows"], start=1):
+            start = nodes[ad["start"]]
+            end = nodes[ad["end"]]
+            if not can_connect_nodes(start, end):
+                raise ValueError(
+                    f"Arrow {index} must connect a concept node and a text node."
+                )
+            arrows.append(Arrow(start, end))
+        self.nodes = nodes
+        self.arrows = arrows
         self.selected_node = None
         self.selected_arrow = None
         self.arrow_source_node = None
         self.update()
+        self.diagram_changed.emit()
+        self.document_changed.emit()
 
-    def export_node_textnode_node_tuples(self, filename):
+    def get_proposition_entries(self):
         outgoing = {}
         for arrow in self.arrows:
             outgoing.setdefault(arrow.start_node, []).append(arrow.end_node)
+        propositions = []
+        for node in self.nodes:
+            if isinstance(node, Node) and not isinstance(node, TextNode):
+                for mid in outgoing.get(node, []):
+                    if isinstance(mid, TextNode):
+                        for end in outgoing.get(mid, []):
+                            if isinstance(end, Node) and not isinstance(end, TextNode):
+                                propositions.append((f"{node.text}, {mid.text}, {end.text}", node))
+        return propositions
+
+    def get_propositions(self):
+        return [text for text, _ in self.get_proposition_entries()]
+
+    def export_node_textnode_node_tuples(self, filename):
         with open(filename, "w", encoding="utf-8") as f:
-            for node in self.nodes:
-                if isinstance(node, Node) and not isinstance(node, TextNode):
-                    for mid in outgoing.get(node, []):
-                        if isinstance(mid, TextNode):
-                            for end in outgoing.get(mid, []):
-                                if isinstance(end, Node) and not isinstance(end, TextNode):
-                                    f.write(f"{node.text}, {mid.text}, {end.text}\n")
+            for proposition in self.get_propositions():
+                f.write(f"{proposition}\n")
 
     def export_svg(self, filename):
         from PyQt6.QtCore import QSize
@@ -437,31 +489,52 @@ class CanvasWidget(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("CVT Visual Concept Map Editor")
+        self.setWindowTitle("CVT Visual Concept Map Editor[*]")
+        self._has_unsaved_changes = False
+        self.setWindowModified(False)
         self.canvas = CanvasWidget(self)
+        self.canvas.document_changed.connect(self.mark_unsaved_changes)
         self.resize(900, 900)  # Make window taller on open
         self.init_ui()
 
     def init_ui(self):
+        concept_pixmap = QPixmap(24, 24)
+        concept_pixmap.fill(Qt.GlobalColor.transparent)
+        icon_painter = QPainter(concept_pixmap)
+        icon_painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        icon_painter.setPen(QPen(Qt.GlobalColor.black, 1))
+        icon_painter.setBrush(QBrush(QColor(Qt.GlobalColor.lightGray)))
+        icon_painter.drawRoundedRect(QRectF(2, 5, 20, 14), 5, 5)
+        icon_painter.end()
+
         add_btn = QPushButton("Concept")
-        add_text_btn = QPushButton("Add Text Node")
-        delete_btn = QPushButton("Delete")
-        color_btn = QPushButton("Color")  # Add color button
-        save_btn = QPushButton("Save")
-        load_btn = QPushButton("Load")
-        export_btn = QPushButton("Export Tuples")
-        export_svg_btn = QPushButton("Export SVG")
-        zoom_in_btn = QPushButton("Zoom In")
-        zoom_out_btn = QPushButton("Zoom Out")
+        add_btn.setIcon(QIcon(concept_pixmap))
+        add_btn.setIconSize(QSize(24, 24))
+        add_text_btn = QPushButton("📝 Linking words")
+        delete_btn = QPushButton("🗑️ Delete")
+        color_btn = QPushButton("🎨 Color")
+        zoom_in_btn = QPushButton("🔍➕ Zoom In")
+        zoom_out_btn = QPushButton("🔍➖ Zoom Out")
+        for button in (add_btn, add_text_btn, delete_btn, color_btn, zoom_in_btn, zoom_out_btn):
+            button.setFlat(True)
+
+        file_menu = self.menuBar().addMenu("📁 File")
+        file_menu.addAction("Save", self.save_diagram)
+        file_menu.addAction("Load", self.load_diagram)
+        file_menu.addAction("Export Propositions", self.export_tuples)
+        file_menu.addAction("Export SVG", self.export_svg)
+        file_menu.addSeparator()
+        quit_action = QAction("Quit", self)
+        quit_action.setMenuRole(QAction.MenuRole.NoRole)
+        quit_action.triggered.connect(self.close)
+        file_menu.addAction(quit_action)
+        help_menu = self.menuBar().addMenu("Help")
+        help_menu.addAction("Using the editor", self.show_help)
 
         add_btn.clicked.connect(self.add_node)
         add_text_btn.clicked.connect(self.add_text_node)
         delete_btn.clicked.connect(self.delete_selected)
         color_btn.clicked.connect(self.change_node_color)  # Connect color button
-        save_btn.clicked.connect(self.save_diagram)
-        load_btn.clicked.connect(self.load_diagram)
-        export_btn.clicked.connect(self.export_tuples)
-        export_svg_btn.clicked.connect(self.export_svg)
         zoom_in_btn.clicked.connect(self.canvas.zoom_in)
         zoom_out_btn.clicked.connect(self.canvas.zoom_out)
 
@@ -470,10 +543,6 @@ class MainWindow(QMainWindow):
         btn_layout.addWidget(add_text_btn)
         btn_layout.addWidget(delete_btn)
         btn_layout.addWidget(color_btn)  # Add color button to layout
-        btn_layout.addWidget(save_btn)
-        btn_layout.addWidget(load_btn)
-        btn_layout.addWidget(export_btn)
-        btn_layout.addWidget(export_svg_btn)
         btn_layout.addWidget(zoom_in_btn)
         btn_layout.addWidget(zoom_out_btn)
         btn_layout.addStretch(1)
@@ -486,11 +555,108 @@ class MainWindow(QMainWindow):
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(self.canvas)
-        main_layout.addWidget(scroll_area)
+
+        proposition_pane = QWidget()
+        proposition_pane.setMinimumWidth(220)
+        proposition_layout = QVBoxLayout(proposition_pane)
+        proposition_layout.addWidget(QLabel("Propositions"))
+        self.proposition_list = QListWidget()
+        self.proposition_list.setWordWrap(True)
+        self.proposition_list.itemClicked.connect(self.select_proposition)
+        proposition_layout.addWidget(self.proposition_list)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.addWidget(scroll_area)
+        splitter.addWidget(proposition_pane)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 0)
+        splitter.setSizes([620, 280])
+        main_layout.addWidget(splitter)
 
         container = QWidget()
         container.setLayout(main_layout)
         self.setCentralWidget(container)
+        self.canvas.diagram_changed.connect(self.refresh_propositions)
+        self.refresh_propositions()
+
+    def refresh_propositions(self):
+        entries = sorted(
+            self.canvas.get_proposition_entries(),
+            key=lambda entry: entry[0].casefold(),
+        )
+        self.proposition_list.clear()
+        self.proposition_nodes = [node for _, node in entries]
+        self.proposition_list.addItems([text for text, _ in entries])
+
+    def show_help(self):
+        QMessageBox.about(
+            self,
+            "Using the CVT Concept Map Editor",
+            """
+            <h2>Using the CVT Concept Map Editor</h2>
+            <h3>Create and edit nodes</h3>
+            <ul>
+              <li><b>Concept</b> adds a concept node; <b>Linking words</b> adds a linking-word node.</li>
+              <li>Double-click a node to edit its text. Double-click empty canvas to add a concept.</li>
+              <li>Left-click a node to select it, then drag to move it.</li>
+              <li>Select a concept and choose <b>Color</b> to change its fill.</li>
+              <li>Use <b>Delete</b> or the Delete key to remove the selected node or arrow.</li>
+            </ul>
+            <h3>Connect nodes</h3>
+            <ul>
+              <li>Right-click a node to start an arrow, then right-click a node of the other type to finish it.</li>
+              <li>Arrows can connect a concept and linking words in either direction; same-type connections are not allowed.</li>
+              <li>Right-click empty canvas to cancel arrow mode.</li>
+            </ul>
+            <h3>Propositions and files</h3>
+            <ul>
+              <li>The pane on the right lists concept → linking words → concept propositions alphabetically.</li>
+              <li>Click a proposition to select its first concept on the canvas.</li>
+              <li>Use the <b>File</b> menu to save/load JSON, export proposition text or SVG, or quit.</li>
+              <li>Quitting with unsaved changes offers Save, Discard, or Cancel.</li>
+            </ul>
+            <h3>View</h3>
+            <p>Use <b>Zoom In</b> and <b>Zoom Out</b> to scale the canvas; scroll to navigate it.</p>
+            """,
+        )
+
+    def select_proposition(self, item):
+        row = self.proposition_list.row(item)
+        if 0 <= row < len(self.proposition_nodes):
+            self.canvas.select_node(self.proposition_nodes[row])
+
+    def mark_unsaved_changes(self):
+        if not self._has_unsaved_changes:
+            self._has_unsaved_changes = True
+            self.setWindowModified(True)
+
+    def mark_saved(self):
+        self._has_unsaved_changes = False
+        self.setWindowModified(False)
+
+    def confirm_quit(self):
+        if not self._has_unsaved_changes:
+            return True
+
+        save = QMessageBox.StandardButton.Save
+        discard = QMessageBox.StandardButton.Discard
+        cancel = QMessageBox.StandardButton.Cancel
+        result = QMessageBox.warning(
+            self,
+            "Unsaved Changes",
+            "This concept map has unsaved changes. Save before quitting?",
+            save | discard | cancel,
+            save,
+        )
+        if result == save:
+            return self.save_diagram()
+        return result == discard
+
+    def closeEvent(self, event):
+        if self.confirm_quit():
+            event.accept()
+        else:
+            event.ignore()
 
     def change_node_color(self):
         self.canvas.change_node_color()
@@ -509,16 +675,28 @@ class MainWindow(QMainWindow):
 
     def save_diagram(self):
         filename, _ = QFileDialog.getSaveFileName(self, "Save Diagram", "", "Diagram Files (*.json)")
-        if filename:
+        if not filename:
+            return False
+        try:
             self.canvas.save_diagram(filename)
+        except OSError as error:
+            self.statusBar().showMessage(f"Could not save diagram: {error}", 5000)
+            return False
+        self.mark_saved()
+        return True
 
     def load_diagram(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Load Diagram", "", "Diagram Files (*.json)")
         if filename:
-            self.canvas.load_diagram(filename)
+            try:
+                self.canvas.load_diagram(filename)
+            except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
+                self.statusBar().showMessage(f"Could not load diagram: {error}", 5000)
+            else:
+                self.mark_saved()
 
     def export_tuples(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Export Tuples", "", "Text Files (*.txt)")
+        filename, _ = QFileDialog.getSaveFileName(self, "Export Propositions", "", "Text Files (*.txt)")
         if filename:
             self.canvas.export_node_textnode_node_tuples(filename)
 

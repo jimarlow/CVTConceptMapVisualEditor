@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CVT Concept Map Editor",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/cvt_concept_map_visual_editor.py",
+            "python": "${workspaceFolder}/venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
+    ]
+}
